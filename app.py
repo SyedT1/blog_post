@@ -7,14 +7,15 @@ from piccolo.columns.column_types import TimestampNow
 
 from blacksheep import Application, FromJSON, json, Response, Content
 
-from sql.tables import Expense, ExpenseIn
+from blog_app.tables import Blog, BlogIn
+from datetime import datetime
 
-ExpenseModelIn: typing.Any = create_pydantic_model(table=ExpenseIn, model_name=" ExpenseModelIn")
+BlogModelIn: typing.Any = create_pydantic_model(table=BlogIn, model_name=" BlogModelIn")
 
-ExpenseModelOut: typing.Any = create_pydantic_model(table=Expense, include_default_columns=True, model_name=" ExpenseModelIn")
+BlogModelOut: typing.Any = create_pydantic_model(table=Blog, include_default_columns=True, model_name=" BlogModelIn")
 
-ExpenseModelPartial: typing.Any = create_pydantic_model(
-    table=Expense, model_name="ExpenseModelPartial", all_optional=True
+BlogModelPartial: typing.Any = create_pydantic_model(
+    table=Blog, model_name="BlogModelPartial", all_optional=True
 )
 
 
@@ -27,72 +28,73 @@ app.use_cors(
     max_age=300,
 )
 
-@app.router.get("/expense")
-async def expenses():
+@app.router.get("/blog")
+async def blogs():
     try:
-        expense = await Expense.select()
-        return expense
+        blog = await Blog.select()
+        return blog
     except:
         return Response(404, content=Content(b"text/plain", b"Not Found"))
 
 
-@app.router.get("/expense/{id}")
-async def expense(id: int):
-    expense = await Expense.select().where(id==Expense.id)
-    if not expense:
+@app.router.get("/blog/{id}")
+async def blog(id: int):
+    blog = await Blog.select().where(id==Blog.id)
+    if not blog:
         return Response(404, content=Content(b"text/plain", b"Id not Found"))
-    return expense
+    return blog
 
 
-@app.router.post("/expense")
-async def create_expense(expense_model: FromJSON[ExpenseModelIn]):
+@app.router.post("/blog")
+async def create_blog(blog_model: FromJSON[BlogModelIn]):
     try:
-        expense = Expense(**expense_model.value.dict())
-        await expense.save()
-        return ExpenseModelOut(**expense.to_dict())
+        blog = Blog(**blog_model.value.dict())
+        await blog.save()
+        return BlogModelOut(**blog.to_dict())
     except:
         return Response(400, content=Content(b"text/plain", b"Bad Request"))
 
 
-@app.router.patch("expense/{id}")
-async def patch_expense(
-        id: int, expense_model: FromJSON[ExpenseModelPartial]
+@app.router.patch("blog/{id}")
+async def patch_blog(
+        id: int, blog_model: FromJSON[BlogModelPartial]
 ):
-    expense = await Expense.objects().get(Expense.id == id)
-    if not expense:
+    blog = await Blog.objects().get(Blog.id == id)
+    if not blog:
         return Response(404, content=Content(b"text/plain", b"Id not Found"))
 
-    for key, value in expense_model.value.dict().items():
+    for key, value in blog_model.value.dict().items():
         if value is not None:
-            setattr(expense, key, value)
+            setattr(blog, key, value)
 
-    await expense.save()
-    return ExpenseModelOut(**expense.to_dict())
+    await blog.save()
+    return BlogModelOut(**blog.to_dict())
 
-
-@app.router.put("/expense/{id}")
-async def put_expense(
-        id: int, expense_model: FromJSON[ExpenseModelIn]
+@app.router.put("/blog/{id}")
+async def put_blog(
+    id: int, blog_model: FromJSON[BlogModelIn]
 ):
-    expense = await Expense.objects().get(Expense.id == id)
-    if not expense:
+    blog = await Blog.objects().get(Blog.id == id)
+    if not blog:
         return Response(404, content=Content(b"text/plain", b"Id Not Found"))
-
-    for key, value in expense_model.value.dict().items():
+    for key, value in blog_model.value.dict().items():
         if value is not None:
-            setattr(expense, key, value)
+            setattr(blog, key, value)
 
-    await expense.save()
-    return ExpenseModelOut(**expense.to_dict())
+    # Update the datetime_of_update field to current time
+    blog.datetime_of_update = datetime.now()
+
+    await blog.save()
+    return BlogModelOut(**blog.to_dict())
 
 
-@app.router.delete("/expense/{id}")
-async def delete_expense(id: int):
-    expense = await Expense.objects().get(Expense.id == id)
-    if not expense:
+@app.router.delete("/blog/{id}")
+async def delete_blog(id: int):
+    blog = await Blog.objects().get(Blog.id == id)
+    if not blog:
         return Response(404, content=Content(b"text/plain", b"Id Not Found"))
-    await expense.remove()
-    return json({"message":"Expense deleted"})
+    await blog.remove()
+    return json({"message":"Blog deleted"})
 
 
 

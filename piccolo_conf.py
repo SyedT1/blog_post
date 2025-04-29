@@ -1,16 +1,13 @@
 from piccolo.conf.apps import AppRegistry
 from piccolo.engine.postgres import PostgresEngine
 
-
-DB = PostgresEngine(config={
-        "database": "expense_tracker",
-        "user": "Your username",
-        "password": "Your password",
+DB = PostgresEngine(
+    config={
+        "database": "postgres",
+        "user": "postgres",
+        "password": "root",
         "host": "localhost",
         "port": 5432,
-})
-
-
-# A list of paths to piccolo apps
-# e.g. ['blog.piccolo_app']
-APP_REGISTRY = AppRegistry(apps=['sql.piccolo_app'])
+    }
+)
+APP_REGISTRY = AppRegistry(apps=["blog_app.piccolo_app"])
